@@ -11,6 +11,13 @@ This Terraform configuration deploys an **n8n** instance on **Azure Container Ap
 - **Customizable Deployment**: Supports flexible configuration options for region, tags, and telemetry, allowing you to tailor the deployment to your specific needs.
 - **Azure Verified Modules**: Leverages Azure Verified Modules (AVMs) to ensure the use of well-defined, tested, and Microsoft-supported modules, enhancing reliability and maintainability.
 
+### n8n v2.0.0 Compatibility & Architecture
+This deployment is fully compatible with **n8n v2.0.0+**, which introduced significant architectural changes (removing the task runner from the main image).
+- **Sidecar Pattern**: Implements the recommended "Sidecar" architecture where the main n8n process and the task runner process run as separate containers within the same Azure Container App pod.
+- **Shared Storage**: Both containers share the same Azure File Share volume for configuration and encryption keys, ensuring seamless operation.
+- **Secure Communication**: The main process and task runner communicate securely over `localhost` using a randomly generated authentication token stored in Azure Key Vault.
+- **Future-Proof Defaults**: Includes configuration for upcoming security defaults (e.g., disabling bare git repos, enforcing auth on OAuth callbacks).
+
 This repository was created to provide a more affordable and accessible way to host n8n in the Azure cloud, as the AKS-based solution was found to be expensive for smaller-scale use cases. This configuration offers a practical alternative, combining the power of n8n and Azure OpenAI with the cost-efficiency and simplicity of Azure Container Apps.
 
 <!-- BEGIN_TF_DOCS -->

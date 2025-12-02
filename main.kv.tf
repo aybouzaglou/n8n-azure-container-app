@@ -1,3 +1,8 @@
+resource "random_password" "n8n_runner_token" {
+  length  = 32
+  special = false
+}
+
 module "key_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
   version = "0.10.0"
@@ -11,17 +16,17 @@ module "key_vault" {
   tenant_id                     = data.azurerm_client_config.current.tenant_id
 
   secrets = {
-    openai-key = {
-      name = "openai-key"
-    }
     psqladmin-password = {
       name = "psqladmin-password"
+    }
+    n8n-runner-token = {
+      name = "n8n-runner-token"
     }
   }
 
   secrets_value = {
-    openai-key         = module.openai.primary_access_key
     psqladmin-password = random_password.myadminpassword.result
+    n8n-runner-token   = random_password.n8n_runner_token.result
   }
 
   role_assignments = {

@@ -25,11 +25,12 @@ module "container_app_n8n" {
   tags                                  = var.tags
 
   template = {
+    min_replicas = 1
     containers = [
       {
         name   = "n8n"
-        memory = "0.5Gi"
-        cpu    = 0.25
+        memory = "1Gi"
+        cpu    = 0.5
         image  = "docker.io/n8nio/n8n:latest"
 
         env = [
@@ -70,6 +71,38 @@ module "container_app_n8n" {
             value = "true"
           },
           {
+            name  = "N8N_RUNNERS_MODE"
+            value = "external"
+          },
+          {
+            name  = "N8N_RUNNERS_BROKER_LISTEN_ADDRESS"
+            value = "0.0.0.0"
+          },
+          {
+            name        = "N8N_RUNNERS_AUTH_TOKEN"
+            secret_name = "n8n-runner-token"
+          },
+          {
+            name  = "N8N_DEFAULT_BINARY_DATA_MODE"
+            value = "filesystem"
+          },
+          {
+            name  = "N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS"
+            value = "false"
+          },
+          {
+            name  = "N8N_SKIP_AUTH_ON_OAUTH_CALLBACK"
+            value = "false"
+          },
+          {
+            name  = "N8N_BLOCK_ENV_ACCESS_IN_NODE"
+            value = "false"
+          },
+          {
+            name  = "N8N_GIT_NODE_DISABLE_BARE_REPOS"
+            value = "true"
+          },
+          {
             name  = "WEBHOOK_URL"
             value = "https://${module.naming.container_app.name_unique}-n8n.${azurerm_container_app_environment.this.default_domain}"
           },
@@ -91,6 +124,30 @@ module "container_app_n8n" {
           }
         ]
 
+        volume_mounts = [
+          {
+            name = "n8nconfig"
+            path = "/home/node/.n8n"
+          }
+        ]
+      },
+      {
+        name   = "n8n-task-runners"
+        memory = "0.5Gi"
+        cpu    = 0.25
+        image  = "docker.io/n8nio/runners:latest"
+
+        env = [
+          {
+            name  = "N8N_RUNNERS_TASK_BROKER_URI"
+            value = "ws://localhost:5679"
+          },
+          {
+            name        = "N8N_RUNNERS_AUTH_TOKEN"
+            secret_name = "n8n-runner-token"
+          }
+        ]
+        
         volume_mounts = [
           {
             name = "n8nconfig"
@@ -131,6 +188,11 @@ module "container_app_n8n" {
     db_password = {
       name                = "dbpassword"
       key_vault_secret_id = module.key_vault.secrets_resource_ids["psqladmin-password"].id
+      identity            = azurerm_user_assigned_identity.this.id
+    }
+    n8n_runner_token = {
+      name                = "n8n-runner-token"
+      key_vault_secret_id = module.key_vault.secrets_resource_ids["n8n-runner-token"].id
       identity            = azurerm_user_assigned_identity.this.id
     }
   }
